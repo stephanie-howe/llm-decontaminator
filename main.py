@@ -20,14 +20,14 @@ if __name__ == "__main__":
 
     parser.add_argument("--model", type=str, default="gpt-4", help="The name of the OpenAI model to use")
     parser.add_argument("--data-type", type=str, default="code", help="The name of the instruction function to use")
-    parser.add_argument("--max-workers", type=int, default=2, help="The maximum number of worker threads to use")
+    parser.add_argument("--max-workers", type=int, default=64, help="The maximum number of worker threads to use")
 
     args = parser.parse_args()
 
     check_openai_key()
 
-    bert_model = SentenceTransformer(args.bert_model)
-    database = build_database(bert_model, args.train_path, args.test_path, args.output_path, args.top_k, args.batch_size, args.device)
+    # bert_model = SentenceTransformer(args.bert_model)
+    database = build_database(args.train_path, args.test_path, args.output_path, args.top_k, args.batch_size, args.device)
 
     instruct = datatype_to_instruct(args.data_type)
     print("Starting LLM detection...")

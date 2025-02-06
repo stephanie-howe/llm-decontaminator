@@ -13,7 +13,12 @@ from transformers import (
     LlamaTokenizer,
     AutoModel,
 )
+import cohere
 
+if "CO_API_KEY" not in os.environ:
+    raise Exception("Please set your CO_API_KEY environment variable.")
+
+co = cohere.Client(os.environ["CO_API_KEY"])
 
 
 def read_dataset(r_path):
@@ -25,21 +30,35 @@ def read_dataset(r_path):
 def bert_encode(model, data, batch_size=32, device=None):
     return model.encode(data, batch_size=batch_size, show_progress_bar=True, device=device)
 
+
+def cohere_encode(data, batch_size=512):
+    embeddings = []
+
+    # process in batches
+    for i in range(0, len(data), batch_size):
+        print(f"Processing sample {i} to {i + batch_size}")
+        batch = data[i:i + batch_size]
+        response = co.embed(texts=batch, input_type="search_query", model="embed-english-v3.0")
+        embeddings.extend(response.embeddings)
+
+    return embeddings
+
+
 def top_k_similarity(train_embs, test_embs, top_k):
     # Compute cosine-similarities
     cosine_scores = util.cos_sim(test_embs, train_embs)
     # Find the top-k most similar train_embs for each test_emb
+    # print(torch.topk(cosine_scores, k=top_k, dim=1))
     top_k_indices = torch.topk(cosine_scores, k=top_k, dim=1).indices
-
     return top_k_indices
 
 
-def build_database(model, train_path, test_path, output_path,  top_k=1, batch_size=32, device=None):
+def build_database(train_path, test_path, output_path,  top_k=1, batch_size=32, device=None):
 
     train_cases = read_dataset(train_path)
     test_cases = read_dataset(test_path)
-    train_embs = bert_encode(model, train_cases, batch_size=batch_size, device=device)
-    test_embs = bert_encode(model, test_cases, batch_size=batch_size, device=device)
+    train_embs = cohere_encode(train_cases, batch_size=batch_size)
+    test_embs = cohere_encode(test_cases, batch_size=batch_size)
     top_k_indices = top_k_similarity(train_embs, test_embs, top_k)
 
     db = []
@@ -70,5 +89,4 @@ if __name__ == "__main__":
     parser.add_argument('--device', type=str, default=None, help='Device to use for encoding (e.g. "cuda:0")')
     args = parser.parse_args()
 
-    model = SentenceTransformer(args.bert_model)
-    build_database(model, args.train_path, args.test_path, args.output_path, args.top_k, args.batch_size, args.device)
+    build_database(args.train_path, args.test_path, args.output_path, args.top_k, args.batch_size, args.device)

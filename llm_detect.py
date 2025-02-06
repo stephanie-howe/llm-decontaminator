@@ -13,7 +13,7 @@ client = OpenAI()
 def check_openai_key():
     if not "OPENAI_API_KEY" in os.environ:
         raise Exception("Please set your OPENAI_API_KEY environment variable.")
-
+    
 
 def detect_contamination(model, question1, question2, instruct):
 
