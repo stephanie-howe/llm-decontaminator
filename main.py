@@ -15,7 +15,7 @@ if __name__ == "__main__":
     parser.add_argument('--output_path', type=str, required=True, help='Path to output database')
     parser.add_argument('--bert-model', type=str, default='multi-qa-MiniLM-L6-cos-v1', help='Path to sentence transformer model')
     parser.add_argument('--top_k', type=int, default=1, help='Number of top-k similar cases to retrieve')
-    parser.add_argument('--batch_size', type=int, default=32, help='Batch size for encoding')
+    parser.add_argument('--batch_size', type=int, default=512, help='Batch size for encoding')
     parser.add_argument('--device', type=str, default=None, help='Device to use for encoding (e.g. "cuda:0")')
 
     parser.add_argument("--model", type=str, default="gpt-4", help="The name of the OpenAI model to use")
